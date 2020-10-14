@@ -1,62 +1,13 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-executors:
-
-  release:
-    docker:
-      - image: circleci/node:10.16.1
-  terraform:
-    docker:
-      - image: hashicorp/terraform:0.13.0
-
-jobs:
-  validate:
-    executor: terraform
-    steps:
-      - checkout
-      - run:
-          name: Terraform Validate
-          command: |
-            terraform init
-            terraform validate
-          no_output_timeout: 30m
-
-  plan:
-    executor: terraform
-    steps:
-      - checkout
-      - run:
-          name: Terraform Plan
-          command: |
-            terraform init
-            terraform plan
-          no_output_timeout: 30m
-
-  release:
-    executor: release
-    steps:
-      - checkout
-      - run:
-          name: Release-it
-          command: |
-            npm install
-            git config --global user.email "wesley@stratotechnology.com"
-            git config --global user.name "Wesley Charles Blake"
-            npm run release --ci
-
-
+# Use a package of configuration called an orb.
+orbs:
+  # Declare a dependency on the welcome-orb
+  welcome: circleci/welcome-orb@0.4.1
+# Orchestrate or schedule a set of jobs
 workflows:
-  version: 2
-  build-and-deploy:
+  # Name the workflow "welcome"
+  welcome:
+    # Run the welcome/run job in its own container
     jobs:
-
-      - validate
-      - plan:
-          requires:
-            - validate
-      - release:
-          context: CI
-          requires:
-            - plan
-          filters:
-            branches:
-              only: master
+      - welcome/run
